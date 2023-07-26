@@ -35,7 +35,7 @@ variables:
   asocApiKeySecret: xxxxxxxxxxxxxxxxxxx
   appId: xxxxxxxxxxxxxxxxxxx
   sevSecGw: totalIssues
-  maxIssuesAllowed: 200
+  maxIssuesAllowed: 3
   # below part are variables used only for DAST scanning
   appscanPresenceId: 00000000-0000-0000-0000-000000000000
   urlTarget: https://demo.testfire.net
