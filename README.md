@@ -1,7 +1,7 @@
-# HCL AppScan SAST GitLab CI/CD
+# HCL AppScan on Cloud for GitLab CI/CD
 Your code is better and more secure with HCL AppScan.
 
-The HCL AppScan SAST GitLab CI/CD enables you to run static analysis security testing (SAST) against the files in your repository. The SAST scan identifies security vulnerabilities in your code and stores the results in AppScan on Cloud.
+The HCL AppScan on Cloud for GitLab CI/CD enables you to run static analysis security testing (SAST) against the files in your repository and/or dynamic analysis security testint (DAST) against a running web application or REST APIs. The SAST scan identifies security vulnerabilities in your code and DAST scan in your deployed application and both store the results in AppScan on Cloud.
 
 # Usage
 ## Register
