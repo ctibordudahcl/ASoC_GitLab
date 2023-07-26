@@ -1,7 +1,7 @@
-# HCL AppScan SAST Github Action
+# HCL AppScan SAST GitLab CI/CD
 Your code is better and more secure with HCL AppScan.
 
-The HCL AppScan SAST Github Action enables you to run static analysis security testing (SAST) against the files in your repository. The SAST scan identifies security vulnerabilities in your code and stores the results in AppScan on Cloud.
+The HCL AppScan SAST GitLab CI/CD enables you to run static analysis security testing (SAST) against the files in your repository. The SAST scan identifies security vulnerabilities in your code and stores the results in AppScan on Cloud.
 
 # Usage
 ## Register
@@ -36,19 +36,39 @@ If you don't have an account, register on [HCL AppScan on Cloud (ASoC)](https://
 
 # Examples
 ```yaml
-name: "HCL AppScan SAST"
-on:
-  workflow_dispatch
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Run AppScan SAST scan
-        uses: HCL-TECH-SOFTWARE/appscan-sast-action@v1.0.1
-        with:
-          asoc_key: ${{secrets.ASOC_KEY}}
-          asoc_secret: ${{secrets.ASOC_SECRET}}
-          application_id: ${{vars.ASOC_APPID}}
+image: debian:latest
+
+# The options to sevSecGw are highIssues, mediumIssues, lowIssues and totalIssues
+# maxIssuesAllowed is the amount of issues in selected sevSecGw
+# appId is application id located in ASoC 
+variables:
+  asocApiKeyId: xxxxxxxxxxxxxxxxxxx
+  asocApiKeySecret: xxxxxxxxxxxxxxxxxxx
+  appId: xxxxxxxxxxxxxxxxxxx
+  sevSecGw: totalIssues
+  maxIssuesAllowed: 200
+
+stages:
+- scan-sast
+
+scan-job:
+  stage: scan-sast
+  script:
+  # installing requeriments
+  - 'apt update && apt install curl jq unzip -y'
+  # Downloading and preparing SAClientUtil
+  - curl https://cloud.appscan.com/api/SCX/StaticAnalyzer/SAClientUtil?os=linux > $HOME/SAClientUtil.zip
+  - unzip $HOME/SAClientUtil.zip -d $HOME
+  - rm -f $HOME/SAClientUtil.zip
+  - mv $HOME/SAClientUtil.* $HOME/SAClientUtil
+  - export PATH="$HOME/SAClientUtil/bin:${PATH}"
+  # Generate IRX files based on source root folder downloaded by Gitlab
+  - appscan.sh prepare
+  # Authenticate in ASOC
+  - appscan.sh api_login -u $asocApiKeyId -P $asocApiKeySecret -persist
+  # Upload IRX file to ASOC to be analyzed and receive scanId
+  - scanName=$CI_PROJECT_NAME-$CI_JOB_ID
+  - appscan.sh queue_analysis -a $appId -n $scanName > output.txt
+  - scanId=$(sed -n '2p' output.txt)
+  - echo "The scan name is $scanName and scanId is $scanId"
 ```
