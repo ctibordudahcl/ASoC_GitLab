@@ -17,9 +17,11 @@ If you don't have an account, register on [HCL AppScan on Cloud (ASoC)](https://
 # Required Inputs
 | Name |   Description    |
 |    :---:    |    :---:    |
-| asoc_key | Your API key from [the API page](https://cloud.appscan.com/main/settings) |
-| asoc_secret | Your API secret from [the API page](https://cloud.appscan.com/main/settings) |
-| application_id | The ID of the application in ASoC. |
+| asocApiKeyId | Your API key from [the API page](https://cloud.appscan.com/main/settings) |
+| asocApiKeySecret | Your API secret from [the API page](https://cloud.appscan.com/main/settings) |
+| appId | The ID of the application in ASoC. |
+| sevSecGw | Defines severity level for the security gateway (options: highIssues, mediumIssues, lowIssues or totalIssues). |
+| maxIssuesAllowed | Maximum number of issues for selected severity level in variable sevSecGw. |
 
 # Optional Inputs
 | Name | Description | Default Value |
