@@ -36,9 +36,15 @@ variables:
   appId: xxxxxxxxxxxxxxxxxxx
   sevSecGw: totalIssues
   maxIssuesAllowed: 200
+  # below part are variables used only for DAST scanning
+  appscanPresenceId: 00000000-0000-0000-0000-000000000000
+  urlTarget: https://demo.testfire.net
+  loginDastConfig: login.dast.config
+  manualExplorerDastConfig: manualexplorer.dast.config
 
 stages:
 - scan-sast
+- scan-dast
 
 scan-job:
   stage: scan-sast
@@ -60,4 +66,39 @@ scan-job:
   - appscan.sh queue_analysis -a $appId -n $scanName > output.txt
   - scanId=$(sed -n '2p' output.txt)
   - echo "The scan name is $scanName and scanId is $scanId"
+  ...
+
+  stage: scan-dast
+  script:
+  # installing requeriments
+  - 'apt update && apt install curl jq git -y'  
+  # Authenticate and get token
+  - asocToken=$(curl -s -X POST --header 'Content-Type:application/json' --header 'Accept:application/json' -d '{"KeyId":"'"${asocApiKeyId}"'","KeySecret":"'"${asocApiKeySecret}"'"}' 'https://cloud.appscan.com/api/V2/Account/ApiKeyLogin' | grep -oP '(?<="Token":")[^"]*')
+  # Check if there is login file in root repository folder and upload to ASoC
+  - >
+    if [ -f "$loginDastConfig" ]; then 
+      loginDastConfigId=$(curl -s -X 'POST' 'https://cloud.appscan.com/api/v2/FileUpload' -H 'accept:application/json' -H "Authorization:Bearer $asocToken" -H 'Content-Type:multipart/form-data' -F "fileToUpload=@$loginDastConfig;type=application/xml" | grep -oP '(?<="FileId":")[^"]*');
+      echo "$loginDastConfig file exist. So it will be uploaded to ASoC and will be used to Authenticate in the URL target during tests. Login file id is $loginDastConfigId.";
+    else
+      echo "Login file not identified.";
+    fi
+  # Check if there is manual explorer file in root repository folder and upload to ASoC  
+  - >
+    if [ -f "$manualExplorerDastConfig" ]; then 
+      manualExplorerDastConfigId=$(curl -s -X 'POST' 'https://cloud.appscan.com/api/v2/FileUpload' -H 'accept:application/json' -H "Authorization:Bearer $asocToken" -H 'Content-Type:multipart/form-data' -F "fileToUpload=@$manualExplorerDastConfig;type=application/xml" | grep -oP '(?<="FileId":")[^"]*');
+      echo "$manualExplorerDastConfig file exist. So it will be uploaded to ASoC and will be used to navigate in the URL target during tests. Manual Explorer file id is $manualExplorerDastConfigId.";
+    else
+      echo "Manual Explorer file not identified.";
+    fi
+  - scanName=$CI_PROJECT_NAME-$CI_JOB_ID
+  # Start scan. If there is manual explorer file, start the scan  in test only mode otherwise full scan
+  - >
+    if [ -f $manualExplorerDastConfig ]; then
+      scanId=$(curl -s -X 'POST' 'https://cloud.appscan.com/api/v2/Scans/DynamicAnalyzerWithFiles' -H 'accept:application/json' -H "Authorization:Bearer $asocToken" -H 'Content-Type:application/json' -d  '{"StartingUrl":"'"$urlTarget"'","TestOnly":true,"ExploreItems":[{"FileId":"'"$manualExplorerDastConfigId"'"}],"LoginUser":"","LoginPassword":"","TestPolicy":"Default.policy","ExtraField":"","ScanType":"Staging","PresenceId":"'"$appscanPresenceId"'","IncludeVerifiedDomains":false,"HttpAuthUserName":"","HttpAuthPassword":"","HttpAuthDomain":"","TestOptimizationLevel":"Fastest","LoginSequenceFileId":"'"$loginDastConfigId"'","ThreadNum":10,"ConnectionTimeout":null,"UseAutomaticTimeout":true,"MaxRequestsIn":null,"MaxRequestsTimeFrame":null,"ScanName":"'"DAST $scanName $urlTarget"'","EnableMailNotification":false,"Locale":"en","AppId":"'"$appId"'","Execute":true,"Personal":false,"ClientType":"user-site","Comment":null,"FullyAutomatic":false,"RecurrenceRule":null,"RecurrenceStartDate":null}' | jq -r '. | {Id} | join(" ")');
+      echo "Scan started with Manual Explorer and Test Only mode, scanId $scanId";
+    else
+      scanId=$(curl -s -X 'POST' 'https://cloud.appscan.com/api/v2/Scans/DynamicAnalyzerWithFiles' -H 'accept:application/json' -H "Authorization:Bearer $asocToken" -H 'Content-Type:application/json' -d  '{"StartingUrl":"'"$urlTarget"'","TestOnly":false,"ExploreItems":[],"LoginUser":"","LoginPassword":"","TestPolicy":"Default.policy","ExtraField":"","ScanType":"Staging","PresenceId":"'"$appscanPresenceId"'","IncludeVerifiedDomains":false,"HttpAuthUserName":"","HttpAuthPassword":"","HttpAuthDomain":"","TestOptimizationLevel":"Fastest","LoginSequenceFileId":"'"$loginDastConfigId"'","ThreadNum":10,"ConnectionTimeout":null,"UseAutomaticTimeout":true,"MaxRequestsIn":null,"MaxRequestsTimeFrame":null,"ScanName":"'"DAST $scanName $urlTarget"'","EnableMailNotification":false,"Locale":"en","AppId":"'"$appId"'","Execute":true,"Personal":false,"ClientType":"user-site","Comment":null,"FullyAutomatic":false,"RecurrenceRule":null,"RecurrenceStartDate":null}' | jq -r '. | {Id} | join(" ")');
+      echo "Scan started, scanId $scanId";
+    fi
+    ...
 ```
