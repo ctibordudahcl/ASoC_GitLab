@@ -22,6 +22,10 @@ If you don't have an account, register on [HCL AppScan on Cloud (ASoC)](https://
 | appId | The ID of the application in ASoC. |
 | sevSecGw | Defines severity level for the security gateway (options: highIssues, mediumIssues, lowIssues or totalIssues). |
 | maxIssuesAllowed | Maximum number of issues for selected severity level in variable sevSecGw. |
+| appscanPresenceId | DAST variable only - Appscan Presence ID to be used for the scan. |
+| urlTarget | DAST variable only - Base URL for the scan. |
+| loginDastConfig | DAST variable only - Config file for recorded login authentication to be used during the scan. |
+| manualExplorerDastConfig | DAST variable only - Config file for manual explore to be used during the scan. |
 
 # Examples
 ```yaml
