@@ -26,7 +26,7 @@ workflow:
 
 stages:
 - scan-sast
-# - scan-dast
+- scan-dast
 
 sast-scan-job:
   stage: scan-sast
@@ -95,6 +95,8 @@ sast-scan-job:
 
 dast-scan-job:
   stage: scan-dast
+  rules:
+   - when: manual
   script:
   # installing requeriments
   - 'apt update && apt install curl jq git -y'  
