@@ -15,9 +15,14 @@ variables:
   loginDastConfig: login.dast.config
   manualExplorerDastConfig: manualexplorer.dast.config
 
-#workflow:
-#  rules:
-#    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: never  # Prevent pipeline run for push event
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+    - when: always # Run pipeline for all other cases
 
 stages:
 - scan-sast
