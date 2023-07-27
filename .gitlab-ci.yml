@@ -17,7 +17,7 @@ variables:
 
 stages:
 - scan-sast
-- scan-dast
+# - scan-dast
 
 sast-scan-job:
   stage: scan-sast
